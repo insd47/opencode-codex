@@ -1,11 +1,15 @@
 {
-  "name": "opencode-codex",
-  "version": "0.1.0",
+  "name": "@insd47/opencode-codex",
+  "version": "1.0.0",
   "description": "OpenCode plugin for ChatGPT Plus/Pro OAuth with clean multi-account management",
   "license": "MIT",
   "author": "insd47",
   "type": "module",
   "main": "dist/server.js",
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org/"
+  },
   "exports": {
     ".": "./dist/server.js",
     "./tui": "./dist/tui.tsx"

@@ -19,7 +19,7 @@ export const tui: TuiPlugin = async (api) => {
       {
         namespace: 'palette',
         name: 'codex.accounts.switch',
-        title: 'switch Codex account',
+        title: 'Switch Codex account',
         category: 'Codex',
         slashName: 'accounts',
         run() {

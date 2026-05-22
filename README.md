@@ -1,6 +1,6 @@
 # opencode-codex
 
-![demo](.docs/demo.png)
+<img width="1148" height="679" alt="demo" src="https://github.com/user-attachments/assets/b95327da-0b02-4506-bb2f-da036e651fd3" />
 
 A clean, native multi-account Codex (ChatGPT Plus/Pro OAuth) integration for
 [OpenCode](https://opencode.ai). Adds multiple-account support, account
@@ -55,7 +55,7 @@ account. Repeat for additional accounts.
 
 ## Managing accounts
 
-![account switching](.docs/accounts.png)
+<img width="1135" height="680" alt="account switching" src="https://github.com/user-attachments/assets/5a8856a1-333e-4be3-a677-dde164f40ea8" />
 
 | Action | Where                          |
 |--------|--------------------------------|

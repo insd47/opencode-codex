@@ -16,7 +16,7 @@
     "forceConsistentCasingInFileNames": true,
     "resolveJsonModule": true,
     "verbatimModuleSyntax": false,
-    "jsx": "preserve",
+    "jsx": "react-jsx",
     "jsxImportSource": "@opentui/solid"
   },
   "include": ["src/**/*"],

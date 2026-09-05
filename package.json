@@ -16,11 +16,12 @@
   },
   "exports": {
     ".": "./dist/server.js",
-    "./tui": "./dist/tui.tsx"
+    "./tui": "./dist/tui.js"
   },
   "files": ["dist", "README.md", "LICENSE"],
   "scripts": {
     "build": "node build.mjs",
+    "test": "npm run build && node --test test/*.test.mjs",
     "typecheck": "tsc --noEmit"
   },
   "engines": {

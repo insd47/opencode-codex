@@ -1,1 +1,1 @@
-export { tui, default } from './tui/index';
+export { tui, default } from './tui/index.js';

@@ -284,6 +284,8 @@ export function create(): typeof fetch {
     const isCodex = isCodexRoute(parsed);
     const context = isCodex ? trace.create() : undefined;
     const originalHeaders = requestHeaders(input, init);
+    const sessionID = originalHeaders.get(selection.SESSION_HEADER) ?? undefined;
+    originalHeaders.delete(selection.SESSION_HEADER);
     const metadata = requestBodyMetadata(init);
     const target = isCodexRoute(parsed) ? new URL(CODEX_ENDPOINT) : parsed;
     trace.log(context, 'request.start', {
@@ -291,7 +293,7 @@ export function create(): typeof fetch {
       sourcePath: parsed.pathname,
       targetHost: target.host,
       targetPath: target.pathname,
-      processSelected: !!selection.id(),
+      sessionSelected: !!selection.id(sessionID),
       signalProvided: !!init?.signal,
       aborted: init?.signal?.aborted ?? false,
       ...metadata,
@@ -314,7 +316,10 @@ export function create(): typeof fetch {
 
     for (let attempt = 1; attempt <= attempts; attempt++) {
       const excluded = timeoutExcluded(Date.now(), requestTimedOutAccounts);
-      const account = selection.pick(accounts.snapshot(), { exclude: excluded });
+      const account = selection.pick(accounts.snapshot(), {
+        exclude: excluded,
+        sessionID,
+      });
       if (!account) {
         cleanup();
         trace.log(context, 'request.no_account', { sourcePath: parsed.pathname });

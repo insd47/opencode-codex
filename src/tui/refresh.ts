@@ -13,8 +13,8 @@ async function all(): Promise<void> {
   );
 }
 
-export async function activeNow(): Promise<void> {
-  const a = selection.active(await accounts.load());
+export async function activeNow(sessionID?: string): Promise<void> {
+  const a = selection.active(await accounts.load(), sessionID);
   if (a) await usage.fetch(a).catch(() => undefined);
 }
 
@@ -22,11 +22,11 @@ export function start(api: TuiPluginApi): void {
   void all();
   const interval = setInterval(() => void all(), INTERVAL_MS);
   let lastIdle = 0;
-  const off = api.event.on('session.idle', () => {
+  const off = api.event.on('session.idle', (event) => {
     const now = Date.now();
     if (now - lastIdle < IDLE_DEBOUNCE_MS) return;
     lastIdle = now;
-    void activeNow();
+    void activeNow(event.properties.sessionID);
   });
   api.lifecycle.onDispose(() => {
     clearInterval(interval);

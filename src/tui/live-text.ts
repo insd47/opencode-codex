@@ -19,6 +19,7 @@ export function bindAccountsText(
   api: TuiPluginApi,
   text: TextRenderable,
   render: (store: Store) => StyledText | string,
+  sessionID?: string,
   extraSubscriptions: Subscribe[] = [],
 ): void {
   let disposed = false;
@@ -41,5 +42,10 @@ export function bindAccountsText(
   text.once(RenderableEvents.DESTROYED, dispose);
   api.lifecycle.onDispose(dispose);
   update();
-  void accounts.load().then(update);
+  void accounts.load().then(async (store) => {
+    if (sessionID) {
+      await selection.ensureSession(sessionID, accounts.active(store)?.id);
+    }
+    update();
+  });
 }

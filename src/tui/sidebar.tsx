@@ -20,8 +20,8 @@ interface Line {
   reset?: string;
 }
 
-function activeLines(store: Store): Line[] {
-  const a = selection.active(store);
+function activeLines(store: Store, sessionID: string): Line[] {
+  const a = selection.active(store, sessionID);
   if (!a?.usage) return [];
   return a.usage.windows.map((w) => ({
     label: quota.label(w.windowMinutes),
@@ -37,7 +37,7 @@ function poolLines(store: Store): Line[] {
   }));
 }
 
-export function Sidebar(props: { api: TuiPluginApi }) {
+export function Sidebar(props: { api: TuiPluginApi; sessionID: string }) {
   const content = (store: Store): StyledText => {
     const theme = props.api.theme.current;
     if (store.accounts.length === 0) {
@@ -69,7 +69,9 @@ export function Sidebar(props: { api: TuiPluginApi }) {
       }
     };
 
-    if (selection.active(store)) appendRows('Quota', activeLines(store));
+    if (selection.active(store, props.sessionID)) {
+      appendRows('Quota', activeLines(store, props.sessionID));
+    }
     if (store.accounts.length > 1) appendRows('All Quota', poolLines(store));
     return new StyledText(chunks);
   };
@@ -77,7 +79,7 @@ export function Sidebar(props: { api: TuiPluginApi }) {
   return (
     <text
       ref={(text: TextRenderable) =>
-        bindAccountsText(props.api, text, content)
+        bindAccountsText(props.api, text, content, props.sessionID)
       }
       selectable={false}
       wrapMode="none"

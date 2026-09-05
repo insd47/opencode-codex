@@ -12,9 +12,9 @@ function trim(label: string, max = MAX): string {
   return label.length > max ? label.slice(0, max - 1) + '…' : label;
 }
 
-export function PromptStatus(props: { api: TuiPluginApi }) {
+export function PromptStatus(props: { api: TuiPluginApi; sessionID: string }) {
   const content = (store: Store): StyledText => {
-    const a = selection.active(store);
+    const a = selection.active(store, props.sessionID);
     if (!a) {
       return new StyledText([
         fg(props.api.theme.current.textMuted)('no Codex account'),
@@ -31,7 +31,7 @@ export function PromptStatus(props: { api: TuiPluginApi }) {
   return (
     <text
       ref={(text: TextRenderable) =>
-        bindAccountsText(props.api, text, content)
+        bindAccountsText(props.api, text, content, props.sessionID)
       }
       fg={props.api.theme.current.textMuted}
       selectable={false}

@@ -37,7 +37,7 @@ function showPlanChoices(api: TuiPluginApi, account: Account): void {
   const current = quota.multiplier(account);
   api.ui.dialog.replace(() => (
     <api.ui.DialogSelect
-      title={`Quota plan · ${accountName(account)}`}
+      title={`Pro quota capacity · ${accountName(account)}`}
       current={current}
       skipFilter
       options={[
@@ -61,7 +61,7 @@ function showPlanChoices(api: TuiPluginApi, account: Account): void {
         api.ui.dialog.clear();
         api.ui.toast({
           variant: 'success',
-          title: 'Codex quota plan',
+          title: 'Codex quota',
           message: `${accountName(account)} · Pro ${option.value}x`,
         });
       }}
@@ -77,7 +77,7 @@ export function showQuotaPlans(api: TuiPluginApi): void {
     if (proAccounts.length === 0) {
       api.ui.dialog.replace(() => (
         <api.ui.DialogAlert
-          title="Codex quota plan"
+          title="Codex quota"
           message="No Pro account has fetched usage yet. Wait for quota data to refresh, then try again."
           onConfirm={() => api.ui.dialog.clear()}
         />

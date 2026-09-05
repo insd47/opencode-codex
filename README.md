@@ -91,7 +91,7 @@ Usage data is fetched in memory from `chatgpt.com/backend-api/wham/usage`:
 and Pro uses 5x by default. The usage API may report both Pro tiers only as
 `pro`, so set each Pro 20x account inside OpenCode:
 
-1. Run `/quota-plan`.
+1. Run `/codex-quota`.
 2. Choose the Pro account by email.
 3. Choose **Pro 5x** or **Pro 20x**.
 

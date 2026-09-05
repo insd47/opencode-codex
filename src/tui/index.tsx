@@ -32,9 +32,9 @@ export const tui: TuiPlugin = async (api) => {
       {
         namespace: 'palette',
         name: 'codex.quota.plan',
-        title: 'Set Codex quota plan',
+        title: 'Configure Codex quota',
         category: 'Codex',
-        slashName: 'quota-plan',
+        slashName: 'codex-quota',
         run() {
           showQuotaPlans(api);
         },

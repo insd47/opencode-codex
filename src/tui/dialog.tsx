@@ -23,19 +23,19 @@ function showScope(
     {
       title: 'All sessions',
       value: 'all',
-      description: 'Switch existing sessions and use for new sessions.',
+      description: 'Existing and new sessions.',
     },
     ...(sessionID
       ? [
           {
             title: 'This session + new sessions',
             value: 'session-and-new' as const,
-            description: 'Keep other existing sessions unchanged.',
+            description: 'Keep other sessions.',
           },
           {
             title: 'This session only',
             value: 'session' as const,
-            description: 'Keep other sessions and the default unchanged.',
+            description: 'Keep default and other sessions.',
           },
         ]
       : [

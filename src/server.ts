@@ -6,16 +6,10 @@ import * as codex from './codex/fetch.js';
 import { OAUTH_DUMMY_KEY, PROVIDER_ID } from './config.js';
 import * as oauth from './oauth/index.js';
 
-const plugin: Plugin = async (input) => {
+const plugin: Plugin = async (_) => {
   await accounts.load();
   await selection.load();
   await auth.sync();
-
-  const listed = await input.client.session.list().catch(() => undefined);
-  await selection.seedSessions(
-    listed?.data?.map((session) => session.id) ?? [],
-    accounts.active()?.id,
-  );
 
   let lastAuthFingerprint = auth.fingerprint(accounts.snapshot());
   accounts.subscribe((store) => {

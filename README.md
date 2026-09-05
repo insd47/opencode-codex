@@ -87,6 +87,22 @@ Usage data is fetched in memory from `chatgpt.com/backend-api/wham/usage`:
 - on every `session.idle` event (debounced),
 - and every 5 minutes thereafter.
 
+`All Quota` weights each account by its effective plan capacity. Plus uses 1x,
+while explicit Pro 5x and Pro 20x plan names use 5x and 20x. The usage API may
+report either Pro tier only as `pro`; those ambiguous accounts use a conservative
+1x fallback unless you provide a per-account override when starting OpenCode:
+
+```sh
+export OPENCODE_CODEX_QUOTA_MULTIPLIERS='{"pro5@example.com":5,"pro20@example.com":20}'
+opencode
+```
+
+The plugin matches these keys against each account's email. Account IDs and
+labels can also be used directly, with `id:` and `label:` prefixes available to
+disambiguate them. Multipliers must be positive numbers. The 5-hour and weekly
+rows are weighted independently, and accounts without fetched usage remain
+excluded.
+
 ## Storage
 
 | Path                                          | Purpose                                                                                                                                                                 |

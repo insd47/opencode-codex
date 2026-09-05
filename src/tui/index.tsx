@@ -2,10 +2,13 @@
 import type { TuiPlugin } from '@opencode-ai/plugin/tui';
 import { showAccounts } from './dialog';
 import { PromptStatus } from './prompt';
+import { initializeQuotaPlans, showQuotaPlans } from './quota-plan';
 import { start as startRefresh } from './refresh.js';
 import { Sidebar } from './sidebar';
 
 export const tui: TuiPlugin = async (api) => {
+  initializeQuotaPlans(api);
+
   api.slots.register({
     order: 250,
     slots: {
@@ -24,6 +27,16 @@ export const tui: TuiPlugin = async (api) => {
         slashName: 'accounts',
         run() {
           showAccounts(api);
+        },
+      },
+      {
+        namespace: 'palette',
+        name: 'codex.quota.plan',
+        title: 'Configure Codex quota',
+        category: 'Codex',
+        slashName: 'codex-quota',
+        run() {
+          showQuotaPlans(api);
         },
       },
     ],

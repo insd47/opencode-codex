@@ -36,7 +36,7 @@ Before installing, it's recommended to log out of every Codex account
 currently signed in to **OpenCode**.
 
 ```sh
-opencode plugin add @insd47/opencode-codex
+opencode plugin @insd47/opencode-codex
 ```
 
 ## Adding accounts

@@ -1,10 +1,16 @@
 /** @jsxImportSource @opentui/solid */
 import type { TuiPluginApi } from '@opencode-ai/plugin/tui';
-import { For, Show, createMemo } from 'solid-js';
+import {
+  StyledText,
+  bold,
+  fg,
+  type TextChunk,
+  type TextRenderable,
+} from '@opentui/core';
 import * as selection from '../accounts/selection.js';
 import type { Store } from '../accounts/types.js';
 import * as quota from '../quota/index.js';
-import { useAccountsStore } from './store-signal.js';
+import { bindAccountsText } from './live-text.js';
 
 const BAR_WIDTH = 17;
 
@@ -31,70 +37,50 @@ function poolLines(store: Store): Line[] {
   }));
 }
 
-function WindowRow(props: { api: TuiPluginApi; line: Line }) {
-  const theme = () => props.api.theme.current;
-  const parts = createMemo(() => quota.bar(props.line.remaining, BAR_WIDTH));
-  const tail = createMemo(() => {
-    const pct = Math.round(props.line.remaining);
-    return props.line.reset && pct < 100
-      ? `  ${props.line.label} · ${pct}% (${props.line.reset})`
-      : `  ${props.line.label} · ${pct}%`;
-  });
-  return (
-    <text wrapMode="none">
-      <span style={{ fg: theme().accent }}>{parts().filled}</span>
-      <span style={{ fg: theme().borderSubtle }}>{parts().empty}</span>
-      <span style={{ fg: theme().textMuted }}>{tail()}</span>
-    </text>
-  );
-}
-
 export function Sidebar(props: { api: TuiPluginApi }) {
-  const store = useAccountsStore();
-  const theme = () => props.api.theme.current;
-  const list = createMemo(() => store().accounts);
-  const active = createMemo(() => selection.active(store()));
-  const showActive = createMemo(() => !!active());
-  const showPool = createMemo(() => list().length > 1);
-  const activeRows = createMemo(() => activeLines(store()));
-  const poolRows = createMemo(() => poolLines(store()));
+  const content = (store: Store): StyledText => {
+    const theme = props.api.theme.current;
+    if (store.accounts.length === 0) {
+      return new StyledText([
+        bold(fg(theme.text)('Codex')),
+        fg(theme.textMuted)(
+          '\nNo accounts. Use /connect → openai to add one.',
+        ),
+      ]);
+    }
+
+    const chunks: TextChunk[] = [];
+    const appendRows = (title: string, rows: Line[]): void => {
+      if (chunks.length > 0) chunks.push(fg(theme.textMuted)('\n\n'));
+      chunks.push(bold(fg(theme.text)(title)));
+      for (const line of rows) {
+        const parts = quota.bar(line.remaining, BAR_WIDTH);
+        const pct = Math.round(line.remaining);
+        const tail =
+          line.reset && pct < 100
+            ? `  ${line.label} · ${pct}% (${line.reset})`
+            : `  ${line.label} · ${pct}%`;
+        chunks.push(
+          fg(theme.textMuted)('\n'),
+          fg(theme.accent)(parts.filled),
+          fg(theme.borderSubtle)(parts.empty),
+          fg(theme.textMuted)(tail),
+        );
+      }
+    };
+
+    if (selection.active(store)) appendRows('Quota', activeLines(store));
+    if (store.accounts.length > 1) appendRows('All Quota', poolLines(store));
+    return new StyledText(chunks);
+  };
 
   return (
-    <Show
-      when={list().length > 0}
-      fallback={
-        <box gap={0}>
-          <text fg={theme().text}>
-            <b>Codex</b>
-          </text>
-          <text fg={theme().textMuted}>
-            No accounts. Use /connect → openai to add one.
-          </text>
-        </box>
+    <text
+      ref={(text: TextRenderable) =>
+        bindAccountsText(props.api, text, content)
       }
-    >
-      <box gap={1}>
-        <Show when={showActive()}>
-          <box gap={0}>
-            <text fg={theme().text}>
-              <b>Quota</b>
-            </text>
-            <For each={activeRows()}>
-              {(line) => <WindowRow api={props.api} line={line} />}
-            </For>
-          </box>
-        </Show>
-        <Show when={showPool()}>
-          <box gap={0}>
-            <text fg={theme().text}>
-              <b>All Quota</b>
-            </text>
-            <For each={poolRows()}>
-              {(line) => <WindowRow api={props.api} line={line} />}
-            </For>
-          </box>
-        </Show>
-      </box>
-    </Show>
+      selectable={false}
+      wrapMode="none"
+    />
   );
 }

@@ -1,9 +1,10 @@
 /** @jsxImportSource @opentui/solid */
 import type { TuiPluginApi } from '@opencode-ai/plugin/tui';
-import { Show, createMemo } from 'solid-js';
+import { StyledText, fg, type TextRenderable } from '@opentui/core';
 import * as selection from '../accounts/selection.js';
+import type { Store } from '../accounts/types.js';
 import * as quota from '../quota/index.js';
-import { useAccountsStore } from './store-signal.js';
+import { bindAccountsText } from './live-text.js';
 
 const MAX = 24;
 
@@ -12,29 +13,30 @@ function trim(label: string, max = MAX): string {
 }
 
 export function PromptStatus(props: { api: TuiPluginApi }) {
-  const store = useAccountsStore();
-  const active = createMemo(() => selection.active(store()));
-  const status = createMemo(() => {
-    const a = active();
-    if (!a) return;
+  const content = (store: Store): StyledText => {
+    const a = selection.active(store);
+    if (!a) {
+      return new StyledText([
+        fg(props.api.theme.current.textMuted)('no Codex account'),
+      ]);
+    }
     const name = a.label || a.email || a.id;
-    return { name: trim(name), plan: quota.plan(a) };
-  });
+    const plan = quota.plan(a);
+    return new StyledText([
+      fg(props.api.theme.current.accent)(trim(name)),
+      fg(props.api.theme.current.textMuted)(plan ? ` · ${plan}` : ''),
+    ]);
+  };
+
   return (
     <text
+      ref={(text: TextRenderable) =>
+        bindAccountsText(props.api, text, content)
+      }
       fg={props.api.theme.current.textMuted}
       selectable={false}
       truncate
       wrapMode="none"
-    >
-      <Show when={status()} fallback="no Codex account">
-        {(s) => (
-          <>
-            <span style={{ fg: props.api.theme.current.accent }}>{s().name}</span>
-            {s().plan && ` · ${s().plan}`}
-          </>
-        )}
-      </Show>
-    </text>
+    />
   );
 }

@@ -1,9 +1,9 @@
 /** @jsxImportSource @opentui/solid */
 import type { TuiPlugin } from '@opencode-ai/plugin/tui';
-import { showAccounts } from './dialog';
-import { PromptStatus } from './prompt';
+import { showAccounts } from './dialog.js';
+import { PromptStatus } from './prompt.js';
 import { start as startRefresh } from './refresh.js';
-import { Sidebar } from './sidebar';
+import { Sidebar } from './sidebar.js';
 
 export const tui: TuiPlugin = async (api) => {
   api.slots.register({

@@ -87,21 +87,19 @@ Usage data is fetched in memory from `chatgpt.com/backend-api/wham/usage`:
 - on every `session.idle` event (debounced),
 - and every 5 minutes thereafter.
 
-`All Quota` weights each account by its effective plan capacity. Plus uses 1x,
-while explicit Pro 5x and Pro 20x plan names use 5x and 20x. The usage API may
-report either Pro tier only as `pro`; those ambiguous accounts use a conservative
-1x fallback unless you provide a per-account override when starting OpenCode:
+`All Quota` weights each account by its effective plan capacity. Plus uses 1x
+and Pro uses 5x by default. The usage API may report both Pro tiers only as
+`pro`, so set each Pro 20x account inside OpenCode:
 
-```sh
-export OPENCODE_CODEX_QUOTA_MULTIPLIERS='{"pro5@example.com":5,"pro20@example.com":20}'
-opencode
-```
+1. Run `/quota-plan`.
+2. Choose the Pro account by email.
+3. Choose **Pro 5x** or **Pro 20x**.
 
-The plugin matches these keys against each account's email. Account IDs and
-labels can also be used directly, with `id:` and `label:` prefixes available to
-disambiguate them. Multipliers must be positive numbers. The 5-hour and weekly
-rows are weighted independently, and accounts without fetched usage remain
-excluded.
+The choice is saved in OpenCode's plugin storage and applied immediately. A Pro
+5x selection clears the override and restores the default; only Pro 20x accounts
+need an override. The account picker and prompt status show `Pro 5x` or
+`Pro 20x` so you can confirm the effective setting. The 5-hour and weekly rows
+are weighted independently, and accounts without fetched usage remain excluded.
 
 ## Storage
 

@@ -1,11 +1,9 @@
 import type { Account } from '../accounts/index.js';
 
-export const QUOTA_MULTIPLIERS_ENV = 'OPENCODE_CODEX_QUOTA_MULTIPLIERS';
-
 export type QuotaMultiplierOverrides = Readonly<Record<string, number>>;
 
-let cachedOverridesRaw: string | undefined;
-let cachedOverrides: QuotaMultiplierOverrides = {};
+let configuredOverrides: QuotaMultiplierOverrides = {};
+const overrideListeners = new Set<() => void>();
 
 /**
  * Build a progress bar split into filled/empty halves. The caller renders
@@ -44,55 +42,67 @@ export function left(usedPercent: number | undefined): number | undefined {
   return Math.max(0, Math.min(100, 100 - usedPercent));
 }
 
-/** Parse positive, finite per-account quota multipliers from JSON. */
-export function parseMultiplierOverrides(
-  raw: string | undefined,
+/** Keep only supported Pro quota multipliers. */
+export function normalizeMultiplierOverrides(
+  value: unknown,
 ): QuotaMultiplierOverrides {
-  if (!raw) return {};
-  try {
-    const parsed: unknown = JSON.parse(raw);
-    if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) return {};
-    return Object.fromEntries(
-      Object.entries(parsed).filter(
-        (entry): entry is [string, number] =>
-          typeof entry[1] === 'number' &&
-          Number.isFinite(entry[1]) &&
-          entry[1] > 0,
-      ),
-    );
-  } catch {
-    return {};
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return {};
+  return Object.fromEntries(
+    Object.entries(value).filter(
+      (entry): entry is [string, number] =>
+        entry[1] === 5 || entry[1] === 20,
+    ),
+  );
+}
+
+export function multiplierOverrides(): QuotaMultiplierOverrides {
+  return configuredOverrides;
+}
+
+export function configureMultiplierOverrides(value: unknown): void {
+  const next = normalizeMultiplierOverrides(value);
+  const previousEntries = Object.entries(configuredOverrides);
+  const nextEntries = Object.entries(next);
+  const unchanged =
+    previousEntries.length === nextEntries.length &&
+    nextEntries.every(([key, weight]) => configuredOverrides[key] === weight);
+  if (unchanged) return;
+  configuredOverrides = next;
+  for (const listener of overrideListeners) {
+    try {
+      listener();
+    } catch {}
   }
 }
 
-function configuredMultiplierOverrides(): QuotaMultiplierOverrides {
-  const raw = process.env[QUOTA_MULTIPLIERS_ENV];
-  if (raw === cachedOverridesRaw) return cachedOverrides;
-  cachedOverridesRaw = raw;
-  cachedOverrides = parseMultiplierOverrides(raw);
-  return cachedOverrides;
+export function subscribeMultiplierOverrides(listener: () => void): () => void {
+  overrideListeners.add(listener);
+  return () => overrideListeners.delete(listener);
 }
 
-/** Infer a capacity multiplier only when the raw plan name is unambiguous. */
+/** Infer a capacity multiplier from the raw plan name. */
 export function planMultiplier(planType: string | undefined): number | undefined {
   if (!planType) return undefined;
   const compact = planType.toLowerCase().replace(/[^a-z0-9]/g, '');
   if (compact.includes('pro20x') || compact.includes('20xpro')) return 20;
   if (compact.includes('pro5x') || compact.includes('5xpro')) return 5;
+  if (compact.includes('pro')) return 5;
   if (compact.includes('plus')) return 1;
   return undefined;
 }
 
 /**
  * Resolve an account's effective quota capacity. Email addresses can be used
- * directly as override keys; `id:` and `label:` are also supported. Bare or
- * unknown Pro variants conservatively fall back to 1x because the usage API
- * currently reports both tiers as `pro`.
+ * directly as override keys; `id:` and `label:` are also supported. Bare Pro
+ * values default to 5x because that is the minimum Pro tier; unknown plans
+ * fall back to 1x.
  */
 export function multiplier(
   account: Account,
-  overrides: QuotaMultiplierOverrides = configuredMultiplierOverrides(),
+  overrides: QuotaMultiplierOverrides = configuredOverrides,
 ): number {
+  const planType = account.usage?.planType;
+  const isPro = planType?.toLowerCase().includes('pro') ?? false;
   const keys = [
     account.email,
     account.label,
@@ -100,14 +110,14 @@ export function multiplier(
     `id:${account.id}`,
     account.label ? `label:${account.label}` : undefined,
   ];
-  for (const key of keys) {
-    if (!key) continue;
-    const value = overrides[key];
-    if (typeof value === 'number' && Number.isFinite(value) && value > 0) {
-      return value;
+  if (isPro) {
+    for (const key of keys) {
+      if (!key) continue;
+      const value = overrides[key];
+      if (value === 5 || value === 20) return value;
     }
   }
-  return planMultiplier(account.usage?.planType) ?? 1;
+  return planMultiplier(planType) ?? 1;
 }
 
 /**
@@ -116,7 +126,7 @@ export function multiplier(
  */
 export function aggregate(
   accounts: Account[],
-  overrides: QuotaMultiplierOverrides = configuredMultiplierOverrides(),
+  overrides: QuotaMultiplierOverrides = configuredOverrides,
 ): Array<{ windowMinutes: number; remaining: number }> {
   const byMinutes = new Map<
     number,
@@ -149,7 +159,10 @@ export function plan(account: Account | undefined): string | undefined {
   const raw = account?.usage?.planType;
   if (!raw) return undefined;
   const lower = raw.toLowerCase();
-  if (lower.includes('pro')) return 'Pro';
+  if (lower.includes('pro')) {
+    const weight = multiplier(account);
+    return weight === 5 || weight === 20 ? `Pro ${weight}x` : 'Pro';
+  }
   if (lower.includes('plus')) return 'Plus';
   return raw;
 }
